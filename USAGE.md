@@ -2,23 +2,24 @@
 
 ## Table of Contents
 
-* [What problem does Packwerk solve?](#what-problem-does-packwerk-solve)
-* [What is a package?](#what-is-a-package)
-  * [Package principles](#package-principles)
-* [Getting started](#getting-started)
-  * [Setting up Spring](#setting-up-spring)
-* [Configuring Packwerk](#configuring-packwerk)
-  * [Using a custom ERB parser](#using-a-custom-erb-parser)
-* [Validating the package system](#validating-the-package-system)
-* [Defining packages](#defining-packages)
-  * [Package metadata](#package-metadata)
-* [Types of boundary checks](#types-of-boundary-checks)
-  * [Enforcing privacy boundary](#enforcing-privacy-boundary)
-    * [Using public folders](#using-public-folders)
-  * [Enforcing dependency boundary](#enforcing-dependency-boundary)
-* [Checking for violations](#checking-for-violations)
-* [Recording existing violations](#recording-existing-violations)
-  * [Understanding the list of deprecated references](#understanding-the-list-of-deprecated-references)
+- [What problem does Packwerk solve?](#what-problem-does-packwerk-solve)
+- [What is a package?](#what-is-a-package)
+  - [Package principles](#package-principles)
+- [Getting started](#getting-started)
+  - [Setting up Spring](#setting-up-spring)
+- [Configuring Packwerk](#configuring-packwerk)
+  - [Using a custom ERB parser](#using-a-custom-erb-parser)
+- [Validating the package system](#validating-the-package-system)
+- [Defining packages](#defining-packages)
+  - [Package metadata](#package-metadata)
+- [Types of boundary checks](#types-of-boundary-checks)
+  - [Enforcing privacy boundary](#enforcing-privacy-boundary)
+    - [Using public folders](#using-public-folders)
+    - [Using a public root](#using-a-public-root)
+  - [Enforcing dependency boundary](#enforcing-dependency-boundary)
+- [Checking for violations](#checking-for-violations)
+- [Recording existing violations](#recording-existing-violations)
+  - [Understanding the list of deprecated references](#understanding-the-list-of-deprecated-references)
 
 ## What problem does Packwerk solve?
 
@@ -30,7 +31,7 @@ Packwerk is a gem that can be used to enforce boundaries between groups of code 
 
 A package is a folder containing autoloaded code. To decide whether code belongs together in a package, these are some design best practices:
 
-- We should package things together that have high functional [cohesion](https://en.wikipedia.org/wiki/Cohesion_(computer_science)).
+- We should package things together that have high functional [cohesion](<https://en.wikipedia.org/wiki/Cohesion_(computer_science)>).
 - Packages should be relatively loosely coupled to each other.
 
 ![cohesion](docs/cohesion.png)
@@ -52,31 +53,30 @@ Then, you can generate the necessary files to get Packwerk running by executing:
 
 Here is a list of files generated:
 
-| File                        | Location     | Description |
-|-----------------------------|--------------|------------|
-| Packwerk configuration      | packwerk.yml | See [Setting up the configuration file](#Setting-up-the-configuration-file) |
-| Root package                | package.yml  | A package for the root folder |
+| File                   | Location     | Description                                                                 |
+| ---------------------- | ------------ | --------------------------------------------------------------------------- |
+| Packwerk configuration | packwerk.yml | See [Setting up the configuration file](#Setting-up-the-configuration-file) |
+| Root package           | package.yml  | A package for the root folder                                               |
 
 After that, you may begin creating packages for your application. See [Defining packages](#Defining-packages)
 
 ### Setting up Spring
 
-[Spring](https://github.com/rails/spring) is a preloader for Rails. Because `packwerk` loads `Rails`, it can be sped up dramatically by enabling spring.  Packwerk supports the usage of Spring.
+[Spring](https://github.com/rails/spring) is a preloader for Rails. Because `packwerk` loads `Rails`, it can be sped up dramatically by enabling spring. Packwerk supports the usage of Spring.
 Firstly, spring needs to know about the packwerk spring command when spring is loading. To do that, add `require 'packwerk/spring_command'` to `config/spring.rb` in your application.
 Secondly, to enable Spring, first run `bin/spring binstub packwerk` which will "springify" the generated binstub.
-
 
 ## Configuring Packwerk
 
 Packwerk reads from the `packwerk.yml` configuration file in the root directory. Packwerk will run with the default configuration if any of these settings are not specified.
 
-| Key                  | Default value                             | Description  |
-|----------------------|-------------------------------------------|--------------|
-| include              | **/*.{rb,rake,erb}                        | list of patterns for folder paths to include |
-| exclude              | {bin,node_modules,script,tmp,vendor}/**/* | list of patterns for folder paths to exclude |
-| package_paths        | **/                                       | a single pattern or a list of patterns to find package configuration files, see: [Defining packages](#Defining-packages) |
-| custom_associations  | N/A                                       | list of custom associations, if any |
-| parallel             | true                                      | when true, fork code parsing out to subprocesses |
+| Key                 | Default value                                 | Description                                                                                                              |
+| ------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| include             | \*_/_.{rb,rake,erb}                           | list of patterns for folder paths to include                                                                             |
+| exclude             | {bin,node\*modules,script,tmp,vendor}/\*\*/\_ | list of patterns for folder paths to exclude                                                                             |
+| package_paths       | \*\*/                                         | a single pattern or a list of patterns to find package configuration files, see: [Defining packages](#Defining-packages) |
+| custom_associations | N/A                                           | list of custom associations, if any                                                                                      |
+| parallel            | true                                          | when true, fork code parsing out to subprocesses                                                                         |
 
 ### Using a custom ERB parser
 
@@ -123,13 +123,14 @@ _Note: It is helpful to define a namespace that corresponds to the package name 
 Package metadata can be included in the `package.yml`. Metadata won't be validated, and can thus be anything. We recommend including information on ownership and stewardship of the package.
 
 Example:
+
 ```yaml
-    # components/sales/package.yml
-    metadata:
-      stewards:
-      - "@Shopify/sales"
-      slack_channels:
-      - "#sales"
+# components/sales/package.yml
+metadata:
+  stewards:
+    - "@Shopify/sales"
+  slack_channels:
+    - "#sales"
 ```
 
 ## Types of boundary checks
@@ -146,8 +147,9 @@ There are two ways you can enforce privacy for your package:
 
 ```yaml
 # components/merchandising/package.yml
-enforce_privacy: true  # will make everything private that is not in
-                        # the components/merchandising/app/public folder
+enforce_privacy:
+  true # will make everything private that is not in
+  # the components/merchandising/app/public folder
 ```
 
 Setting `enforce_privacy` to true will make all references to private constants in your package a violation.
@@ -158,13 +160,14 @@ Setting `enforce_privacy` to true will make all references to private constants 
 # components/merchandising/package.yml
 enforce_privacy:
   - "::Merchandising::Product"
-  - "::SomeNamespace"  # enforces privacy for the namespace and
-                       # everything nested in it
+  - "::SomeNamespace" # enforces privacy for the namespace and
+    # everything nested in it
 ```
 
 It will be a privacy violation when a file outside of the `components/merchandising` package tries to reference `Merchandising::Product`.
 
 ##### Using public folders
+
 You may enforce privacy either way mentioned above and still expose a public API for your package by placing constants in the public folder, which by default is `app/public`. The constants in the public folder will be made available for use by the rest of the application.
 
 ##### Defining your own public folder
@@ -174,10 +177,30 @@ You may prefer to override the default public folder, you can do so on a per-pac
 Example:
 
 ```yaml
+# app/packages/my_domain/package.yml
 public_path: my/custom/path/
 ```
 
+##### Using a public root
+
+In addition to a public folder, if your package is defined within an [autoload path](https://guides.rubyonrails.org/autoloading_and_reloading_constants.html#config-autoload-paths), you may opt into treating the package's top level constant as public, using `public_root:`.
+
+Example:
+
+```yaml
+public_root: true
+```
+
+This is only possible when Packwerk can identify a single unambiguous path to represent the package's root constant:
+
+| Supports `public_root: true`? | Package path                                | Zeitwerk autoload paths                              | Package's root constant     | Constant's path                                                                                          |
+| ----------------------------- | ------------------------------------------- | ---------------------------------------------------- | --------------------------- | -------------------------------------------------------------------------------------------------------- |
+| ✅                            | `app/components/my_domain/package.yml`      | `app/{components,models}/`                           | `::MyDomain`                | `app/components/my_domain.rb`                                                                            |
+| ✅                            | `lib/my_package/my_sub_package/package.yml` | `lib/`                                               | `::MyPackage::MySubPackage` | `app/my_package/my_sub_package.rb`                                                                       |
+| ❌                            | `my_domain/package.yml`                     | `{my_domain,other_domain}/app/{models,controllers}/` | `::MyDomain`                | Ambiguous, could live in `my_domain/app/models/my_domain.rb` or `my_domain/app/controllers/my_domain.rb` |
+
 #### Enforcing dependency boundary
+
 A package's dependency boundary is violated whenever it references a constant in some package that has not been declared as a dependency.
 
 Specify `enforce_dependencies: true` to start enforcing the dependencies of a package. The intentional dependencies of the package are specified as a list under a `dependencies:` key.
@@ -235,7 +258,6 @@ _Note: Changing dependencies or enabling dependencies will not require a full up
 
 See: [TROUBLESHOOT.md - Troubleshooting violations](TROUBLESHOOT.md#Troubleshooting_violations)
 
-
 ### Understanding the list of deprecated references
 
 The deprecated references list is called `deprecated_references.yml` and can be found in the package folder. The list outlines the constant violations of the package, where the violation is located, and the file defining the violation.
@@ -246,16 +268,16 @@ The deprecated references list should not be added to, but worked off over time.
 components/merchant:
   "::Checkouts::Core::CheckoutId":
     violations:
-    - dependency
+      - dependency
     files:
-    - components/merchant/app/public/merchant/generate_order.rb
+      - components/merchant/app/public/merchant/generate_order.rb
 ```
 
 Above is an example of a constant violation entry in `deprecated_references.yml`.
 
-* `components/merchant` - package where the constant violation is found
-* `::Checkouts::Core::CheckoutId` - violated constant in question
-* `dependency` - type of violation, either dependency or privacy
-* `components/merchant/app/public/merchant/generate_order.rb` - path to the file containing the violated constant
+- `components/merchant` - package where the constant violation is found
+- `::Checkouts::Core::CheckoutId` - violated constant in question
+- `dependency` - type of violation, either dependency or privacy
+- `components/merchant/app/public/merchant/generate_order.rb` - path to the file containing the violated constant
 
 Violations exist within the package that makes a violating reference. This means privacy violations of your package can be found listed in `deprecated_references.yml` files in the packages with the reference to a private constant.

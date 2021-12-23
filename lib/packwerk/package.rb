@@ -38,6 +38,11 @@ module Packwerk
       @dependencies.include?(package.name)
     end
 
+    sig { returns(T::Boolean) }
+    def has_public_root?
+      @config["public_root"] == true
+    end
+
     sig { params(path: String).returns(T::Boolean) }
     def package_path?(path)
       return true if root?
@@ -60,7 +65,12 @@ module Packwerk
 
     sig { params(path: String).returns(T::Boolean) }
     def public_path?(path)
-      path.start_with?(public_path)
+      path.start_with?(public_path) || has_public_root? && public_root?(path)
+    end
+
+    sig { params(path: String).returns(T::Boolean) }
+    def public_root?(path)
+      package_path?(path) && ("#{@name}.rb" == path)
     end
 
     sig { returns(T.nilable(String)) }
